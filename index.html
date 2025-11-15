@@ -1,0 +1,52 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DOBRO SYSTEM ☘ | AI-автоматизация цифровых руководств</title>
+    <meta name="description" content="Система на базе ИИ для автоматизации создания и публикации цифровых руководств в стиле DOBRO ☘. Анализ трендов, генерация, проверка и упаковка контента для Ozon." />
+    <meta name="keywords" content="ИИ, DOBRO, цифровые руководства, автоматизация контента, создание контента, Ozon, Telegram, маркетинг, фрилансеры, инфопродукты, генерация контента, Gemini API" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'brand-green': '#22c55e',
+              'brand-dark': '#111827',
+              'brand-gray': '#374151',
+              'brand-light-gray': '#9ca3af',
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-in-out',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+            },
+          },
+        },
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0",
+    "jspdf": "https://cdn.skypack.dev/jspdf@^2.5.1"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-brand-dark text-white">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
