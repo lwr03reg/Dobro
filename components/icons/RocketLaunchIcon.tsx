@@ -1,0 +1,1 @@
+export const RocketLaunchIcon = () => null;

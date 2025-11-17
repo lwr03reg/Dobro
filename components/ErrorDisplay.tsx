@@ -1,0 +1,1 @@
+export const ErrorDisplay = () => null;
