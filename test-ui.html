@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOBRO SYSTEM - Test UI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #111827;
+            color: #fff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { 
+            color: #22c55e; 
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #9ca3af;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .section { 
+            background: #1f2937; 
+            padding: 25px; 
+            border-radius: 12px; 
+            margin-bottom: 20px;
+            border: 1px solid #374151;
+        }
+        .section h2 {
+            color: #22c55e;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            background: #111827;
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #22c55e;
+        }
+        button {
+            background: #22c55e;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        button:hover { 
+            background: #16a34a;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button:disabled { 
+            background: #6b7280; 
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            background: #0f172a;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #1e293b;
+        }
+        .error { color: #ef4444; }
+        .success { color: #22c55e; }
+        .loading { color: #fbbf24; }
+        .info { color: #3b82f6; }
+        .token-display {
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 11px;
+            margin-top: 10px;
+            word-break: break-all;
+            border: 1px solid #374151;
+        }
+        .guide-preview {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .guide-preview h3 {
+            color: #22c55e;
+            margin-bottom: 10px;
+        }
+        .guide-preview .step {
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 8px 0;
+            border-left: 3px solid #22c55e;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #1f2937;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #374151;
+        }
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #22c55e;
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>☘ DOBRO SYSTEM</h1>
+        <p class="subtitle">AI-powered guide generation - Test Interface</p>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="value" id="apiStatus">⏳</div>
+                <div class="label">API Status</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="requestCount">0</div>
+                <div class="label">Requests</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="guidesCount">0</div>
+                <div class="label">Guides Created</div>
+            </div>
+        </div>
+        
+        <!-- Регистрация -->
+        <div class="section">
+            <h2>1️⃣ Регистрация</h2>
+            <input type="email" id="regEmail" placeholder="Email" value="test@example.com">
+            <input type="password" id="regPassword" placeholder="Пароль (минимум 8 символов)" value="password123">
+            <input type="text" id="regName" placeholder="Имя (опционально)" value="Test User">
+            <button onclick="register()">Зарегистрироваться</button>
+            <div id="regResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Логин -->
+        <div class="section">
+            <h2>🔐 Вход (если уже зарегистрирован)</h2>
+            <input type="email" id="loginEmail" placeholder="Email" value="test@example.com">
+            <input type="password" id="loginPassword" placeholder="Пароль" value="password123">
+            <button onclick="login()">Войти</button>
+            <div id="loginResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Получить тренды -->
+        <div class="section">
+            <h2>2️⃣ Получить актуальные темы</h2>
+            <p style="color: #9ca3af; font-size: 13px; margin-bottom: 10px;">
+                AI проанализирует тренды и предложит 6 актуальных тем для руководств
+            </p>
+            <button onclick="getTrends()">🔍 Анализировать тренды (5-10 сек)</button>
+            <div id="trendsResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Создать руководство -->
+        <div class="section">
+            <h2>3️⃣ Создать руководство</h2>
+            <input type="text" id="topic" placeholder="Тема руководства" value="Как начать фриланс в 2024">
+            <button onclick="generateGuide()">✨ Создать руководство (10-20 сек)</button>
+            <div id="guideResult" class="result" style="display: none;"></div>
+            <div id="guidePreview" style="display: none;"></div>
+        </div>
+
+        <!-- Улучшить руководство -->
+        <div class="section">
+            <h2>4️⃣ Улучшить руководство</h2>
+            <p style="color: #9ca3af; font-size: 13px; margin-bottom: 10px;">
+                AI проверит и улучшит созданное руководство
+            </p>
+            <button onclick="validateGuide()">🔧 Улучшить последнее руководство (10-15 сек)</button>
+            <div id="validateResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Добавить интерактив -->
+        <div class="section">
+            <h2>5️⃣ Добавить интерактивный контент</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button onclick="addChecklist()">✅ Добавить чек-лист</button>
+                <button onclick="addQuiz()">❓ Добавить тест</button>
+            </div>
+            <div id="interactiveResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Токен -->
+        <div class="section" id="tokenSection" style="display: none;">
+            <h2>🔑 Ваш токен</h2>
+            <div class="token-display" id="tokenDisplay"></div>
+            <button onclick="copyToken()" style="margin-top: 10px;">📋 Копировать токен</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3001/api';
+        let token = localStorage.getItem('token');
+        let lastGuide = null;
+        let requestCount = 0;
+        let guidesCount = 0;
+
+        // Check API status on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('http://localhost:3001/health');
+                if (response.ok) {
+                    document.getElementById('apiStatus').textContent = '✅';
+                    document.getElementById('apiStatus').style.color = '#22c55e';
+                } else {
+                    document.getElementById('apiStatus').textContent = '❌';
+                    document.getElementById('apiStatus').style.color = '#ef4444';
+                }
+            } catch (error) {
+                document.getElementById('apiStatus').textContent = '❌';
+                document.getElementById('apiStatus').style.color = '#ef4444';
+            }
+
+            if (token) {
+                showToken();
+            }
+        });
+
+        function updateStats() {
+            requestCount++;
+            document.getElementById('requestCount').textContent = requestCount;
+        }
+
+        function showToken() {
+            document.getElementById('tokenSection').style.display = 'block';
+            document.getElementById('tokenDisplay').textContent = token;
+        }
+
+        function copyToken() {
+            navigator.clipboard.writeText(token);
+            alert('Токен скопирован!');
+        }
+
+        async function register() {
+            const btn = event.target;
+            const result = document.getElementById('regResult');
+            
+            btn.disabled = true;
+            result.style.display = 'block';
+            result.innerHTML = '<span class="loading">⏳ Регистрация...</span>';
+            updateStats();
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('regEmail').value,
+                        password: document.getElementById('regPassword').value,
+                        name: document.getElementById('regName').value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    token = data.token;
+                    localStorage.setItem('token', token);
+                    showToken();
+                    result.innerHTML = `<span class="success">✅ Успешно зарегистрирован!</span>\n\nПользователь: ${data.user.email}\nID: ${data.user.id}`;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Ошибка:</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Ошибка подключения:</span>\n${error.message}\n\nПроверьте, что backend запущен на http://localhost:3001`;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function login() {
+            const btn = event.target;
+            const result = document.getElementById('loginResult');
+            
+            btn.disabled = true;
+            result.style.display = 'block';
+            result.innerHTML = '<span class="loading">⏳ Вход...</span>';
+            updateStats();
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('loginEmail').value,
+                        password: document.getElementById('loginPassword').value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    token = data.token;
+                    localStorage.setItem('token', token);
+                    showToken();
+                    result.innerHTML = `<span class="success">✅ Успешный вход!</span>\n\nПользователь: ${data.user.email}`;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Ошибка:</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Ошибка подключения:</span>\n${error.message}`;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function getTrends() {
+            const btn = event.target;
+            const result = document.getElementById('trendsResult');
+
+            if (!token) {
+                result.style.display = 'block';
+                result.innerHTML = '<span class="error">❌ Сначала зарегистрируйтесь или войдите!</span>';
+                return;
+            }
+
+            btn.disabled = true;
+            result.style.display = 'block';
+            result.innerHTML = '<span class="loading">⏳ Анализирую тренды с помощью OpenAI GPT-4 mini...\n\nЭто займёт 5-10 секунд...</span>';
+            updateStats();
+
+            try {
+                const response = await fetch(`${API_URL}/ai/trending-topics`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    let output = `<span class="success">✅ Получено ${data.topics.length} актуальных тем:</span>\n\n`;
+                    data.topics.forEach((topic, i) => {
+                        output += `${i + 1}. ${topic.icon} ${topic.topic}\n`;
+                        output += `   Категория: ${topic.category}\n`;
+                        output += `   ${topic.description}\n\n`;
+                    });
+                    result.innerHTML = output;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Ошибка:</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Ошибка:</span>\n${error.message}`;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function generateGuide() {
+            const btn = event.target;
+            const result = document.getElementById('guideResult');
+            const preview = document.getElementById('guidePreview');
+            const topic = document.getElementById('topic').value;
+
+            if (!token) {
+                result.style.display = 'block';
+                result.innerHTML = '<span class="error">❌ Сначала зарегистрируйтесь!</span>';
+                return;
+            }
+
+            if (!topic) {
+                result.style.display = 'block';
+                result.innerHTML = '<span class="error">❌ Введите тему!</span>';
+                return;
+            }
+
+            btn.disabled = true;
+            result.style.display = 'block';
+            preview.style.display = 'none';
+            result.innerHTML = '<span class="loading">⏳ Создаю руководство с помощью OpenAI GPT-4 mini...\n\nЭто займёт 10-20 секунд...\n\nAI анализирует тему и создаёт структурированное руководство...</span>';
+            updateStats();
+
+            try {
+                const response = await fetch(`${API_URL}/ai/generate-draft`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ topic })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    lastGuide = data;
+                    guidesCount++;
+                    document.getElementById('guidesCount').textContent = guidesCount;
+                    
+                    result.innerHTML = `<span class="success">✅ Руководство создано!</span>\n\nТема: ${data.topic}\nЗаголовок: ${data.title}\nШагов: ${data.steps.length}`;
+                    
+                    // Show preview
+                    preview.style.display = 'block';
+                    let previewHTML = `<div class="guide-preview">`;
+                    previewHTML += `<h3>${data.title}</h3>`;
+                    previewHTML += `<p style="color: #9ca3af; font-style: italic; margin: 10px 0;">"${data.quote}"</p>`;
+                    previewHTML += `<h4 style="color: #22c55e; margin-top: 15px;">Шаги:</h4>`;
+                    data.steps.forEach((step, i) => {
+                        previewHTML += `<div class="step">`;
+                        previewHTML += `<strong>Шаг ${i + 1}: ${step.what}</strong><br>`;
+                        previewHTML += `<small style="color: #9ca3af;">${step.how}</small>`;
+                        previewHTML += `</div>`;
+                    });
+                    previewHTML += `</div>`;
+                    preview.innerHTML = previewHTML;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Ошибка:</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Ошибка:</span>\n${error.message}`;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function validateGuide() {
+            const btn = event.target;
+            const result = document.getElementById('validateResult');
+
+            if (!lastGuide) {
+                result.style.display = 'block';
+                result.innerHTML = '<span class="error">❌ Сначала создайте руководство!</span>';
+                return;
+            }
+
+            btn.disabled = true;
+            result.style.display = 'block';
+            result.innerHTML = '<span class="loading">⏳ Улучшаю руководство...\n\nAI проверяет логику, добавляет детали...</span>';
+            updateStats();
+
+            try {
+                const response = await fetch(`${API_URL}/ai/validate-guide`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(lastGuide)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    lastGuide = data;
+                    result.innerHTML = `<span class="success">✅ Руководство улучшено!</span>\n\nИзменения применены. Теперь можно добавить интерактивный контент.`;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Ошибка:</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Ошибка:</span>\n${error.message}`;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function addChecklist() {
+            await addInteractive('checklist');
+        }
+
+        async function addQuiz() {
+            await addInteractive('quiz');
+        }
+
+        async function addInteractive(type) {
+            const result = document.getElementById('interactiveResult');
+
+            if (!lastGuide) {
+                result.style.display = 'block';
+                result.innerHTML = '<span class="error">❌ Сначала создайте руководство!</span>';
+                return;
+            }
+
+            result.style.display = 'block';
+            result.innerHTML = `<span class="loading">⏳ Создаю ${type === 'quiz' ? 'тест' : 'чек-лист'}...</span>`;
+            updateStats();
+
+            try {
+                const response = await fetch(`${API_URL}/ai/generate-interactive`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ guide: lastGuide, type })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    lastGuide = { ...lastGuide, ...data };
+                    result.innerHTML = `<span class="success">✅ ${type === 'quiz' ? 'Тест' : 'Чек-лист'} добавлен!</span>\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Ошибка:</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Ошибка:</span>\n${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+// Prisma Schema for DOBRO SYSTEM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum SubscriptionTier {
+  FREE
+  PRO
+  BUSINESS
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  EXPIRED
+  TRIAL
+}
+
+enum GuideStatus {
+  DRAFT
+  GENERATING
+  COMPLETED
+  FAILED
+  PUBLISHED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  name          String?
+  role          UserRole @default(USER)
+  
+  telegramId    String?  @unique
+  telegramUsername String?
+  
+  emailVerified Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastLoginAt   DateTime?
+  
+  // Relations
+  subscription  Subscription?
+  guides        Guide[]
+  payments      Payment[]
+  apiKeys       ApiKey[]
+  
+  @@index([email])
+  @@index([telegramId])
+}
+
+model Subscription {
+  id          String             @id @default(cuid())
+  userId      String             @unique
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  tier        SubscriptionTier   @default(FREE)
+  status      SubscriptionStatus @default(ACTIVE)
+  
+  guidesUsed  Int                @default(0)
+  guidesLimit Int                @default(3)
+  
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  yukassaCustomerId     String?
+  
+  currentPeriodStart DateTime @default(now())
+  currentPeriodEnd   DateTime
+  
+  cancelAtPeriodEnd Boolean  @default(false)
+  canceledAt        DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([stripeSubscriptionId])
+}
+
+model Guide {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  status      GuideStatus @default(DRAFT)
+  
+  // Input
+  topic       String
+  category    String?
+  
+  // Generated Content
+  title       String?
+  quote       String?
+  steps       Json?       // Array of GuideStep
+  quickAction String?
+  mistakes    Json?       // Array of strings
+  bonus       String?
+  checklist   Json?       // Array of strings
+  quiz        Json?       // Array of QuizQuestion
+  
+  // Marketing
+  socialPosts      Json?  // Array of strings
+  emailContent     String?
+  ozonDescription  String?
+  
+  // Metadata
+  ozonMetadata Json?
+  
+  // Files
+  pdfUrl       String?
+  coverUrl     String?
+  
+  // Analytics
+  viewCount    Int     @default(0)
+  downloadCount Int    @default(0)
+  
+  // AI metadata
+  tokensUsed   Int?
+  generationTime Int? // milliseconds
+  aiModel      String?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  publishedAt  DateTime?
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  amount      Decimal       @db.Decimal(10, 2)
+  currency    String        @default("RUB")
+  
+  status      PaymentStatus @default(PENDING)
+  
+  provider    String        // stripe, yukassa
+  providerId  String?       // external payment ID
+  
+  description String?
+  metadata    Json?
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  completedAt DateTime?
+  
+  @@index([userId])
+  @@index([status])
+  @@index([providerId])
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  key         String   @unique
+  name        String
+  
+  isActive    Boolean  @default(true)
+  lastUsedAt  DateTime?
+  
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+  
+  @@index([userId])
+  @@index([key])
+}
+
+model Analytics {
+  id          String   @id @default(cuid())
+  
+  event       String   // guide_created, guide_downloaded, user_registered, etc.
+  userId      String?
+  guideId     String?
+  
+  metadata    Json?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([event])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ErrorLog {
+  id          String   @id @default(cuid())
+  
+  level       String   // error, warning, info
+  message     String
+  stack       String?
+  
+  userId      String?
+  endpoint    String?
+  
+  metadata    Json?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([level])
+  @@index([createdAt])
+}
