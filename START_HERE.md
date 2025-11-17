@@ -1,6 +1,7 @@
 # 🚀 DOBRO SYSTEM - Начни здесь!
 
-> **Статус**: ✅ Backend готов | ⚠️ Frontend требует доработки
+> **Статус**: ✅ Backend готов | ⚠️ Frontend требует доработки  
+> **⚠️ ВАЖНО**: Railway trial закончился → используй [DEPLOY_RENDER.txt](DEPLOY_RENDER.txt) для бесплатного деплоя!
 
 ---
 
@@ -25,34 +26,51 @@
 
 ---
 
-## 🎯 Быстрый старт (5 минут)
+## 🎯 Быстрый старт
 
-### 1. Получи OpenAI API Key
+### 🆓 Вариант 1: Deploy на Render.com (5 минут, БЕСПЛАТНО)
+
+**Railway trial закончился?** Используй Render.com - полностью бесплатно!
+
+1. Открой [DEPLOY_RENDER.txt](DEPLOY_RENDER.txt)
+2. Следуй пошаговой инструкции
+3. Получи рабочий URL в облаке
+
+**Стоимость:** 0₽ (полностью бесплатно!)
+
+**Другие варианты:** [FREE_HOSTING_ALTERNATIVES.md](FREE_HOSTING_ALTERNATIVES.md) - Fly.io, Koyeb, Cyclic
+
+---
+
+### 💻 Вариант 2: Локальная разработка (5 минут)
+
+#### 1. Получи Gemini API Key (бесплатно!)
 
 ```bash
-# Зайди на https://platform.openai.com/api-keys
-# Создай новый API key
+# Зайди на https://aistudio.google.com/apikey
+# Создай новый API key (бесплатно, 1500 запросов/день)
 # Скопируй его
 ```
 
-### 2. Настрой окружение
+#### 2. Настрой окружение
 
 ```bash
-# Скопируй example файл
-cp .env.example .env
-
-# Открой и добавь свой OpenAI key
-nano .env
+# .env уже настроен с Gemini API key!
+cat .env
 ```
 
-**Минимальная конфигурация:**
+**Текущая конфигурация:**
 ```env
-OPENAI_API_KEY=sk-proj-ваш-ключ-здесь
-JWT_SECRET=любая-строка-минимум-32-символа-для-безопасности
+GEMINI_API_KEY=AIzaSyCAPCpq8-sGBxOcPS3qqrFK2HpuIIHIyTE
+JWT_SECRET=P7ZcWqHuvanRFm4dWwoe1OFssJJPo2+Ae83o3DVEwgM=
+NODE_ENV=development
+PORT=3001
+DATABASE_URL=postgresql://dobro:dobro123@localhost:5432/dobro
+REDIS_URL=redis://localhost:6379
 FRONTEND_URL=http://localhost:3000
 ```
 
-### 3. Запусти backend
+#### 3. Запусти backend
 
 ```bash
 # Установи зависимости
@@ -71,7 +89,7 @@ npm run prisma:migrate
 npm run dev
 ```
 
-### 4. Проверь работу
+#### 4. Проверь работу
 
 ```bash
 # Health check
@@ -289,13 +307,14 @@ docker-compose logs postgres
 docker-compose logs redis
 ```
 
-### OpenAI API ошибки
+### Gemini API ошибки
 
 ```bash
 # Проверь, что API key правильный
-echo $OPENAI_API_KEY
+cat .env | grep GEMINI_API_KEY
 
-# Проверь баланс на https://platform.openai.com/usage
+# Проверь лимиты на https://aistudio.google.com/apikey
+# Бесплатно: 1500 запросов/день
 ```
 
 ### Database ошибки
@@ -313,18 +332,22 @@ npm run prisma:migrate
 
 ## 💰 Стоимость
 
-### Разработка
+### Разработка (локально)
 - ✅ Docker (бесплатно)
 - ✅ PostgreSQL (бесплатно)
 - ✅ Redis (бесплатно)
-- 💵 OpenAI API: ~$5/месяц (100 руководств)
+- ✅ Gemini API (бесплатно, 1500 запросов/день)
 
-### Production
-- 💵 Railway/Render: $5-20/месяц
-- 💵 OpenAI API: pay-as-you-go (~$0.05 за руководство)
-- 💵 Domain: $10/год
+**Итого: 0₽**
 
-**Итого: ~$15-30/месяц**
+### Production (облако)
+- ✅ Render.com (бесплатно, 750 часов/месяц)
+- ✅ PostgreSQL на Render (бесплатно 90 дней, потом $7/мес)
+- ✅ Upstash Redis (бесплатно, 10,000 команд/день)
+- ✅ Gemini API (бесплатно, 1500 запросов/день)
+- 💵 Domain: $10/год (опционально)
+
+**Итого: 0₽ (первые 3 месяца), потом $7-17/месяц**
 
 ---
 
