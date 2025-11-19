@@ -40,7 +40,10 @@ class GeminiService {
 
   constructor() {
     // Используем GEMINI_API_KEY если есть, иначе OPENAI_API_KEY для обратной совместимости
-    const apiKey = process.env.GEMINI_API_KEY || config.OPENAI_API_KEY;
+    const apiKey = config.GEMINI_API_KEY || config.OPENAI_API_KEY || '';
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY or OPENAI_API_KEY must be provided');
+    }
     this.client = new GoogleGenerativeAI(apiKey);
     this.model = 'gemini-1.5-flash'; // Бесплатная модель
   }
@@ -159,26 +162,16 @@ class GeminiService {
 
 ВАЖНО: Верни ТОЛЬКО валидный JSON.`;
 
-      const response = await this.client.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: 'system',
-            content: 'Ты - эксперт по созданию практических руководств. Пишешь конкретно, с примерами и инструментами. Отвечаешь только валидным JSON.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: this.maxTokens,
-        response_format: { type: 'json_object' }
-      });
-
-      const content = response.choices[0]?.message?.content;
+      const model = this.client.getGenerativeModel({ model: this.model });
+      const systemPrompt = 'Ты - эксперт по созданию практических руководств. Пишешь конкретно, с примерами и инструментами. Отвечаешь только валидным JSON.';
+      const fullPrompt = `${systemPrompt}\n\n${prompt}`;
+      
+      const result = await model.generateContent(fullPrompt);
+      const response = await result.response;
+      const content = response.text();
+      
       if (!content) {
-        throw new Error('Empty response from OpenAI');
+        throw new Error('Empty response from Gemini');
       }
 
       const guide = JSON.parse(content);
@@ -187,14 +180,13 @@ class GeminiService {
       logger.info('Guide draft generated', {
         topic,
         duration,
-        tokensUsed: response.usage?.total_tokens,
         stepsCount: guide.steps?.length
       });
 
       return guide;
     } catch (error) {
       logger.error('Failed to generate guide draft', { topic, error });
-      throw new Error(`OpenAI API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Gemini API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -223,26 +215,16 @@ ${JSON.stringify(guide, null, 2)}
 
 ВАЖНО: Верни ТОЛЬКО валидный JSON.`;
 
-      const response = await this.client.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: 'system',
-            content: 'Ты - редактор образовательного контента. Улучшаешь качество, добавляешь конкретику. Отвечаешь только валидным JSON.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.5,
-        max_tokens: this.maxTokens,
-        response_format: { type: 'json_object' }
-      });
-
-      const content = response.choices[0]?.message?.content;
+      const model = this.client.getGenerativeModel({ model: this.model });
+      const systemPrompt = 'Ты - редактор образовательного контента. Улучшаешь качество, добавляешь конкретику. Отвечаешь только валидным JSON.';
+      const fullPrompt = `${systemPrompt}\n\n${prompt}`;
+      
+      const result = await model.generateContent(fullPrompt);
+      const response = await result.response;
+      const content = response.text();
+      
       if (!content) {
-        throw new Error('Empty response from OpenAI');
+        throw new Error('Empty response from Gemini');
       }
 
       const validatedGuide = JSON.parse(content);
@@ -250,14 +232,13 @@ ${JSON.stringify(guide, null, 2)}
 
       logger.info('Guide validated', {
         topic: guide.topic,
-        duration,
-        tokensUsed: response.usage?.total_tokens
+        duration
       });
 
       return validatedGuide;
     } catch (error) {
       logger.error('Failed to validate guide', { topic: guide.topic, error });
-      throw new Error(`OpenAI API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Gemini API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -310,26 +291,16 @@ ${JSON.stringify(guide, null, 2)}
 }`;
       }
 
-      const response = await this.client.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: 'system',
-            content: 'Ты - эксперт по созданию интерактивного образовательного контента. Отвечаешь только валидным JSON.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.6,
-        max_tokens: 1500,
-        response_format: { type: 'json_object' }
-      });
-
-      const content = response.choices[0]?.message?.content;
+      const model = this.client.getGenerativeModel({ model: this.model });
+      const systemPrompt = 'Ты - эксперт по созданию интерактивного образовательного контента. Отвечаешь только валидным JSON.';
+      const fullPrompt = `${systemPrompt}\n\n${prompt}`;
+      
+      const geminiResult = await model.generateContent(fullPrompt);
+      const response = await geminiResult.response;
+      const content = response.text();
+      
       if (!content) {
-        throw new Error('Empty response from OpenAI');
+        throw new Error('Empty response from Gemini');
       }
 
       const result = JSON.parse(content);
@@ -338,14 +309,13 @@ ${JSON.stringify(guide, null, 2)}
       logger.info('Interactive content generated', {
         type,
         topic: guide.topic,
-        duration,
-        tokensUsed: response.usage?.total_tokens
+        duration
       });
 
       return result;
     } catch (error) {
       logger.error('Failed to generate interactive content', { type, topic: guide.topic, error });
-      throw new Error(`OpenAI API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Gemini API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -376,26 +346,16 @@ ${JSON.stringify(guide, null, 2)}
   "ozonDescription": "Описание для Ozon"
 }`;
 
-      const response = await this.client.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: 'system',
-            content: 'Ты - маркетолог и копирайтер. Создаёшь продающие тексты. Отвечаешь только валидным JSON.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.8,
-        max_tokens: 2000,
-        response_format: { type: 'json_object' }
-      });
-
-      const content = response.choices[0]?.message?.content;
+      const model = this.client.getGenerativeModel({ model: this.model });
+      const systemPrompt = 'Ты - маркетолог и копирайтер. Создаёшь продающие тексты. Отвечаешь только валидным JSON.';
+      const fullPrompt = `${systemPrompt}\n\n${prompt}`;
+      
+      const geminiResult = await model.generateContent(fullPrompt);
+      const response = await geminiResult.response;
+      const content = response.text();
+      
       if (!content) {
-        throw new Error('Empty response from OpenAI');
+        throw new Error('Empty response from Gemini');
       }
 
       const result = JSON.parse(content);
@@ -403,14 +363,13 @@ ${JSON.stringify(guide, null, 2)}
 
       logger.info('Marketing kit generated', {
         topic: guide.topic,
-        duration,
-        tokensUsed: response.usage?.total_tokens
+        duration
       });
 
       return result;
     } catch (error) {
       logger.error('Failed to generate marketing kit', { topic: guide.topic, error });
-      throw new Error(`OpenAI API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Gemini API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -450,26 +409,16 @@ ${JSON.stringify(guide, null, 2)}
   "vat": "NOT_APPLICABLE"
 }`;
 
-      const response = await this.client.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: 'system',
-            content: 'Ты - эксперт по SEO и маркетплейсам. Создаёшь оптимизированные описания товаров. Отвечаешь только валидным JSON.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.6,
-        max_tokens: 1500,
-        response_format: { type: 'json_object' }
-      });
-
-      const content = response.choices[0]?.message?.content;
+      const model = this.client.getGenerativeModel({ model: this.model });
+      const systemPrompt = 'Ты - эксперт по SEO и маркетплейсам. Создаёшь оптимизированные описания товаров. Отвечаешь только валидным JSON.';
+      const fullPrompt = `${systemPrompt}\n\n${prompt}`;
+      
+      const geminiResult = await model.generateContent(fullPrompt);
+      const response = await geminiResult.response;
+      const content = response.text();
+      
       if (!content) {
-        throw new Error('Empty response from OpenAI');
+        throw new Error('Empty response from Gemini');
       }
 
       const result = JSON.parse(content);
@@ -477,14 +426,13 @@ ${JSON.stringify(guide, null, 2)}
 
       logger.info('Ozon metadata generated', {
         topic: guide.topic,
-        duration,
-        tokensUsed: response.usage?.total_tokens
+        duration
       });
 
       return result;
     } catch (error) {
       logger.error('Failed to generate Ozon metadata', { topic: guide.topic, error });
-      throw new Error(`OpenAI API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Gemini API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

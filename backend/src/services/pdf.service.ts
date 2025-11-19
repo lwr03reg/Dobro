@@ -167,7 +167,7 @@ class PDFService {
     doc
       .fontSize(14)
       .fillColor(this.brandGray)
-      .text(`"${quote}"`, { align: 'center', italic: true });
+      .text(`"${quote}"`, { align: 'center' });
 
     doc.moveDown(2);
     this.addDivider(doc);
@@ -191,7 +191,7 @@ class PDFService {
       doc
         .fontSize(14)
         .fillColor(this.brandDark)
-        .text(`Шаг ${index + 1}: ${step.what}`, { bold: true });
+        .text(`Шаг ${index + 1}: ${step.what}`);
 
       doc.moveDown(0.5);
 

@@ -11,7 +11,8 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),
   
-  OPENAI_API_KEY: z.string().min(1),
+  GEMINI_API_KEY: z.string().min(1).optional(),
+  OPENAI_API_KEY: z.string().min(1).optional(),
   OPENAI_MODEL: z.string().default('gpt-4o-mini'),
   OPENAI_MAX_TOKENS: z.string().transform(Number).default('4096'),
   
@@ -49,7 +50,15 @@ const envSchema = z.object({
 
 const parseEnv = () => {
   try {
-    return envSchema.parse(process.env);
+    const parsed = envSchema.parse(process.env);
+    
+    // Проверяем, что хотя бы один AI API ключ указан
+    if (!parsed.GEMINI_API_KEY && !parsed.OPENAI_API_KEY) {
+      console.error('❌ Error: Either GEMINI_API_KEY or OPENAI_API_KEY must be provided');
+      process.exit(1);
+    }
+    
+    return parsed;
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('❌ Invalid environment variables:');

@@ -17,7 +17,7 @@ export const errorHandler = (
   err: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   logger.error('Error occurred', {
     error: err.message,
@@ -53,7 +53,7 @@ export const errorHandler = (
   }
 
   // Default error
-  res.status(500).json({
+  return res.status(500).json({
     error: 'Internal Server Error',
     message: 'Произошла непредвиденная ошибка',
   });

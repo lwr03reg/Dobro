@@ -12,7 +12,7 @@ router.use(authenticate);
  * GET /api/ai/trending-topics
  * Get trending topics for guide creation
  */
-router.get('/trending-topics', async (req: AuthRequest, res, next) => {
+router.get('/trending-topics', async (_req: AuthRequest, res, next) => {
   try {
     const result = await openaiService.getTrendingTopics();
     res.json(result);
