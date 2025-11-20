@@ -5,6 +5,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: dobro-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: dobro
       POSTGRES_PASSWORD: dobro123
@@ -18,11 +19,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - dobro-network
 
   # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: dobro-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
@@ -32,6 +36,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - dobro-network
 
   # Backend API
   backend:
@@ -39,14 +45,15 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: dobro-backend
+    restart: unless-stopped
     environment:
       NODE_ENV: development
       PORT: 3001
       FRONTEND_URL: http://localhost:3000
       DATABASE_URL: postgresql://dobro:dobro123@postgres:5432/dobro_db
       REDIS_URL: redis://redis:6379
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      OPENAI_MODEL: gpt-4o-mini
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-AIzaSyCAPCpq8-sGBxOcPS3qqrFK2HpuIIHIyTE}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-8480665448:AAElJ5EmARXqJI5sbyAKtBAenMTOPUP1X94}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
     ports:
       - "3001:3001"
@@ -54,28 +61,53 @@ services:
       - ./backend:/app
       - /app/node_modules
       - ./backend/outputs:/app/outputs
+      - ./backend/logs:/app/logs
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: npm run dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - dobro-network
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && npm run dev"
 
   # Frontend (Vite Dev Server)
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
+      context: .
+      dockerfile: Dockerfile.frontend
     container_name: dobro-frontend
+    restart: unless-stopped
     environment:
       VITE_API_URL: http://localhost:3001/api
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
+      - .:/app
       - /app/node_modules
-    command: npm run dev
+      - /app/backend
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - dobro-network
+    command: npm run dev -- --host 0.0.0.0
 
 volumes:
   postgres_data:
   redis_data:
+
+networks:
+  dobro-network:
+    driver: bridge
