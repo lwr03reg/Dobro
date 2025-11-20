@@ -20,21 +20,31 @@ class PDFService {
   /**
    * Generate professional PDF from guide
    */
-  async generatePDF(guide: Guide, userId: string): Promise<string> {
+  async generatePDF(guide: any, userId: string): Promise<string> {
     const startTime = Date.now();
     const filename = `guide_${userId}_${Date.now()}.pdf`;
     const filepath = path.join(this.outputDir, filename);
 
     return new Promise((resolve, reject) => {
       try {
+        // Normalize guide data (handle both snake_case and camelCase)
+        const normalizedGuide = {
+          ...guide,
+          quick_action: guide.quick_action || guide.quickAction,
+          steps: guide.steps || [],
+          mistakes: guide.mistakes || [],
+          checklist: guide.checklist || [],
+          quiz: guide.quiz || [],
+        };
+
         const doc = new PDFDocument({
           size: 'A4',
           margins: { top: 50, bottom: 50, left: 50, right: 50 },
           info: {
-            Title: guide.title,
+            Title: normalizedGuide.title,
             Author: 'DOBRO SYSTEM',
-            Subject: guide.topic,
-            Keywords: guide.topic,
+            Subject: normalizedGuide.topic,
+            Keywords: normalizedGuide.topic,
           },
         });
 
@@ -42,36 +52,46 @@ class PDFService {
         doc.pipe(stream);
 
         // Cover Page
-        this.addCoverPage(doc, guide);
+        this.addCoverPage(doc, normalizedGuide);
         doc.addPage();
 
         // Table of Contents
-        this.addTableOfContents(doc, guide);
+        this.addTableOfContents(doc, normalizedGuide);
         doc.addPage();
 
         // Quote
-        this.addQuote(doc, guide.quote);
+        if (normalizedGuide.quote) {
+          this.addQuote(doc, normalizedGuide.quote);
+        }
 
         // Steps
-        this.addSteps(doc, guide.steps);
+        if (normalizedGuide.steps && normalizedGuide.steps.length > 0) {
+          this.addSteps(doc, normalizedGuide.steps);
+        }
 
         // Quick Action
-        this.addSection(doc, '🚀 Первый шаг к результату', guide.quick_action);
+        if (normalizedGuide.quick_action) {
+          this.addSection(doc, '🚀 Первый шаг к результату', normalizedGuide.quick_action);
+        }
 
         // Mistakes
-        this.addListSection(doc, '🚫 Частые ошибки', guide.mistakes);
+        if (normalizedGuide.mistakes && normalizedGuide.mistakes.length > 0) {
+          this.addListSection(doc, '🚫 Частые ошибки', normalizedGuide.mistakes);
+        }
 
         // Bonus
-        this.addSection(doc, '🎁 Секретный бонус DOBRO', guide.bonus);
+        if (normalizedGuide.bonus) {
+          this.addSection(doc, '🎁 Секретный бонус DOBRO', normalizedGuide.bonus);
+        }
 
         // Checklist
-        if (guide.checklist && guide.checklist.length > 0) {
-          this.addChecklistSection(doc, guide.checklist);
+        if (normalizedGuide.checklist && normalizedGuide.checklist.length > 0) {
+          this.addChecklistSection(doc, normalizedGuide.checklist);
         }
 
         // Quiz
-        if (guide.quiz && guide.quiz.length > 0) {
-          this.addQuizSection(doc, guide.quiz);
+        if (normalizedGuide.quiz && normalizedGuide.quiz.length > 0) {
+          this.addQuizSection(doc, normalizedGuide.quiz);
         }
 
         // Footer on all pages
@@ -84,17 +104,17 @@ class PDFService {
           logger.info('PDF generated successfully', {
             filename,
             duration,
-            topic: guide.topic,
+            topic: normalizedGuide.topic,
           });
           resolve(filepath);
         });
 
         stream.on('error', (error) => {
-          logger.error('PDF generation failed', { error, topic: guide.topic });
+          logger.error('PDF generation failed', { error, topic: normalizedGuide.topic });
           reject(error);
         });
       } catch (error) {
-        logger.error('PDF generation error', { error, topic: guide.topic });
+        logger.error('PDF generation error', { error, topic: guide?.topic || 'unknown' });
         reject(error);
       }
     });
@@ -311,7 +331,7 @@ class PDFService {
     const pages = doc.bufferedPageRange();
 
     for (let i = 0; i < pages.count; i++) {
-      doc.switchToPage(i);
+      doc.switchToPage(pages.start + i);
 
       // Page number
       doc

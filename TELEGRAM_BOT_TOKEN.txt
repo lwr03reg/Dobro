@@ -1,0 +1,28 @@
+# Telegram Bot Token
+
+Для запуска бота нужно:
+
+1. Создать бота через @BotFather в Telegram
+2. Получить токен (формат: 1234567890:ABCdefGHIjklMNOpqrsTUVwxyz)
+3. Добавить токен в .env файл:
+
+```bash
+TELEGRAM_BOT_TOKEN=ваш_токен_здесь
+TELEGRAM_WEBHOOK_URL=https://3001--019a8dc5-1fb2-75da-b2ec-6a6e78647597.us-east-1-01.gitpod.dev/api/webhooks/telegram
+```
+
+## Для тестирования без реального бота:
+
+Можно использовать тестовый токен (не будет работать, но код запустится):
+```
+TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz-TEST
+```
+
+## После создания бота:
+
+1. Замените токен в .env
+2. Перезапустите backend
+3. Откройте бота в Telegram
+4. Отправьте /start
+
+Бот автоматически запустится при старте backend если токен валидный.

@@ -38,6 +38,22 @@ class GeminiService {
   private client: GoogleGenerativeAI;
   private model: string;
 
+  /**
+   * Очищает ответ от Gemini от markdown блоков и парсит JSON
+   */
+  private parseGeminiResponse(content: string): any {
+    let cleanContent = content.trim();
+    
+    // Удаляем markdown блоки ```json ... ``` или ``` ... ```
+    if (cleanContent.startsWith('```json')) {
+      cleanContent = cleanContent.replace(/^```json\n/, '').replace(/\n```$/, '');
+    } else if (cleanContent.startsWith('```')) {
+      cleanContent = cleanContent.replace(/^```\n/, '').replace(/\n```$/, '');
+    }
+    
+    return JSON.parse(cleanContent);
+  }
+
   constructor() {
     // Используем GEMINI_API_KEY если есть, иначе OPENAI_API_KEY для обратной совместимости
     const apiKey = config.GEMINI_API_KEY || config.OPENAI_API_KEY || '';
@@ -45,7 +61,8 @@ class GeminiService {
       throw new Error('GEMINI_API_KEY or OPENAI_API_KEY must be provided');
     }
     this.client = new GoogleGenerativeAI(apiKey);
-    this.model = 'gemini-1.5-flash'; // Бесплатная модель
+    // Используем gemini-2.0-flash для v1beta API (бесплатная модель)
+    this.model = 'gemini-2.0-flash';
   }
 
   /**
@@ -174,7 +191,7 @@ class GeminiService {
         throw new Error('Empty response from Gemini');
       }
 
-      const guide = JSON.parse(content);
+      const guide = this.parseGeminiResponse(content);
       const duration = Date.now() - startTime;
 
       logger.info('Guide draft generated', {
@@ -227,7 +244,7 @@ ${JSON.stringify(guide, null, 2)}
         throw new Error('Empty response from Gemini');
       }
 
-      const validatedGuide = JSON.parse(content);
+      const validatedGuide = this.parseGeminiResponse(content);
       const duration = Date.now() - startTime;
 
       logger.info('Guide validated', {
@@ -303,7 +320,7 @@ ${JSON.stringify(guide, null, 2)}
         throw new Error('Empty response from Gemini');
       }
 
-      const result = JSON.parse(content);
+      const result = this.parseGeminiResponse(content);
       const duration = Date.now() - startTime;
 
       logger.info('Interactive content generated', {
@@ -358,7 +375,7 @@ ${JSON.stringify(guide, null, 2)}
         throw new Error('Empty response from Gemini');
       }
 
-      const result = JSON.parse(content);
+      const result = this.parseGeminiResponse(content);
       const duration = Date.now() - startTime;
 
       logger.info('Marketing kit generated', {
@@ -421,7 +438,7 @@ ${JSON.stringify(guide, null, 2)}
         throw new Error('Empty response from Gemini');
       }
 
-      const result = JSON.parse(content);
+      const result = this.parseGeminiResponse(content);
       const duration = Date.now() - startTime;
 
       logger.info('Ozon metadata generated', {

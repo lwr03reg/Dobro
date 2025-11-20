@@ -11,6 +11,10 @@ import authRoutes from './routes/auth.routes';
 import guidesRoutes from './routes/guides.routes';
 import aiRoutes from './routes/ai.routes';
 import paymentsRoutes from './routes/payments.routes';
+import telegramRoutes from './routes/telegram.routes';
+
+// Services
+import './services/telegram.service'; // Initialize Telegram bot
 
 const app = express();
 
@@ -43,6 +47,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/guides', guidesRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/payments', paymentsRoutes);
+app.use('/api/webhooks', telegramRoutes);
 
 // 404 handler
 app.use((req, res) => {
