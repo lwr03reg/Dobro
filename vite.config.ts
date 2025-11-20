@@ -6,12 +6,16 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
       server: {
-        port: 3000,
+        port: parseInt(process.env.PORT || '3000'),
         host: '0.0.0.0',
-        allowedHosts: ['.gitpod.dev'],
+        allowedHosts: ['.gitpod.dev', '.railway.app', '.up.railway.app'],
         hmr: {
-          clientPort: 3000,
+          clientPort: parseInt(process.env.PORT || '3000'),
         },
+      },
+      preview: {
+        port: parseInt(process.env.PORT || '3000'),
+        host: '0.0.0.0',
       },
       plugins: [react()],
       define: {
