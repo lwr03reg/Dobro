@@ -243,11 +243,12 @@ _Или нажми /cancel для отмены_
       let message = '🔥 *Трендовые темы для гайдов:*\n\n';
       const keyboard: TelegramBot.InlineKeyboardButton[][] = [];
 
-      topics.topics.forEach((topic: string, index: number) => {
-        message += `${index + 1}. ${topic}\n`;
+      topics.topics.forEach((topic: any, index: number) => {
+        const topicText = typeof topic === 'string' ? topic : topic.topic || topic.title || 'Тема';
+        message += `${index + 1}. ${topicText}\n`;
         keyboard.push([
           {
-            text: `✨ ${topic.substring(0, 40)}`,
+            text: `✨ ${topicText.substring(0, 40)}`,
             callback_data: `create_from_topic_${index}`,
           },
         ]);
@@ -477,7 +478,7 @@ _Продолжай создавать добро! ❤️_
       const tone = data.replace('tone_', '');
       await this.setTone(chatId, userId, tone);
     } else if (data.startsWith('marketing_')) {
-      const guideId = data.replace('marketing_', '');
+      // const guideId = data.replace('marketing_', '');
       await this.sendMessage(chatId, '🎨 Функция создания маркетинг-кита будет доступна в следующей версии!');
     } else if (data === 'upgrade') {
       await this.sendMessage(chatId, '💎 Функция улучшения плана будет доступна в следующей версии!');
@@ -618,11 +619,11 @@ _Это последний шаг перед генерацией!_
     await this.sendMessage(chatId, message, { reply_markup: keyboard });
   }
 
-  private async setTone(chatId: number, userId: number, tone: string) {
+  private async setTone(chatId: number, userId: number, _tone: string) {
     const userState = this.userStates.get(userId);
     if (!userState?.data?.topic) return;
 
-    const { topic, audience } = userState.data;
+    const { topic } = userState.data;
 
     await this.sendMessage(
       chatId,
@@ -649,7 +650,7 @@ _Это займёт 10-15 секунд_
 
     try {
       // Generate guide
-      const guide = await openaiService.generateGuideDraft(topic, audience, tone);
+      const guide = await openaiService.generateGuideDraft(topic);
 
       // Save to database
       const telegramId = userId.toString();
@@ -661,7 +662,7 @@ _Это займёт 10-15 секунд_
           topic,
           title: guide.title,
           quote: guide.quote,
-          steps: guide.steps,
+          steps: guide.steps as any,
           quickAction: guide.quick_action,
           mistakes: guide.mistakes,
           bonus: guide.bonus,
@@ -776,7 +777,7 @@ ${mistakes.length > 2 ? `\n... и ещё ${mistakes.length - 2}` : ''}
     }
   }
 
-  private async downloadPDF(chatId: number, userId: number, guideId: string) {
+  private async downloadPDF(chatId: number, _userId: number, guideId: string) {
     try {
       await this.sendMessage(chatId, '📄 Генерирую PDF... Подожди немного.');
 
@@ -839,6 +840,7 @@ ${mistakes.length > 2 ? `\n... и ещё ${mistakes.length - 2}` : ''}
           status: 'ACTIVE',
           guidesLimit: 5,
           guidesUsed: 0,
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         },
       });
 
