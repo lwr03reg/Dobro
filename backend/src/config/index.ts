@@ -38,7 +38,9 @@ const envSchema = z.object({
   S3_SECRET_KEY: z.string().optional(),
   S3_REGION: z.string().default('us-east-1'),
   
-  SENTRY_DSN: z.string().url().optional(),
+  SENTRY_DSN: z.string().optional().transform(val => 
+    val && !val.startsWith('your_') && val !== '' ? val : undefined
+  ),
   
   RATE_LIMIT_WINDOW_MS: z.string().transform(Number).default('900000'),
   RATE_LIMIT_MAX_REQUESTS: z.string().transform(Number).default('100'),
